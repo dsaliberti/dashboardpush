@@ -2,24 +2,20 @@ import Vapor
 
 extension Droplet {
     func setupRoutes() throws {
-        get("hello") { req in
-            var json = JSON()
-            try json.set("hello", "world")
-            return json
-        }
-
-        get("plaintext") { req in
-            return "Hello, world!"
-        }
-
-        // response to requests to /info domain
-        // with a description of the request
-        get("info") { req in
-            return req.description
-        }
-
-        get("description") { req in return req.description }
+        let notificationController = NotificationController()
+        let stravaController = StravaController()
+        let trendController = TrendController()
         
-        try resource("posts", PostController.self)
+        // Receives a Strava Event from webhook
+        get("strava", handler: stravaController.subscribe)
+        
+        // Receives pushes `post`s from Strava API
+        post("strava", handler: stravaController.forwardActivity)
+        
+        // Route for checking trends
+        post("trends", handler: trendController.checkTrend)
+        
+        // Route for storing mobile device token
+        post("registerDevice", handler: notificationController.registerDevice)
     }
 }
